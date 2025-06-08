@@ -23,12 +23,14 @@ var (
 )
 
 type Config struct {
-	Port         string `json:"port"`
-	TMDBApiKey   string `json:"tmdb_api_key"`
-	RadarrURL    string `json:"radarr_url"`
-	RadarrApiKey string `json:"radarr_api_key"`
-	SonarrURL    string `json:"sonarr_url"`
-	SonarrApiKey string `json:"sonarr_api_key"`
+	Port             string `json:"port"`
+	TMDBApiKey       string `json:"tmdb_api_key"`
+	RadarrURL        string `json:"radarr_url"`
+	RadarrApiKey     string `json:"radarr_api_key"`
+	SonarrURL        string `json:"sonarr_url"`
+	SonarrApiKey     string `json:"sonarr_api_key"`
+	RadarrRootFolder string `json:"radarr_root_folder"`
+	SonarrRootFolder string `json:"sonarr_root_folder"`
 }
 
 func main() {
@@ -125,12 +127,12 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 
 	switch mediaType {
 	case "movie":
-		rootFolder := "X:\\plex\\movies"
+		rootFolder := config.RadarrRootFolder
 		errAdd = radarrClient.AddMovieByTMDB(tmdbID, 7, rootFolder)
 		successMessage = "Movie request successfully submitted!"
 
 	case "tv":
-		rootFolder := "X:\\plex\\shows"
+		rootFolder := config.SonarrRootFolder
 		requestType := r.FormValue("request_type")
 
 		opts := sonarr.AddSeriesOptions{

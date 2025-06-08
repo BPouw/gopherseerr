@@ -1,0 +1,15 @@
+{
+    "port": "5055",
+  
+    "tmdb_api_key": "",
+  
+    "radarr_url": "http://localhost:7878",
+    "radarr_api_key": "",
+  
+    "sonarr_url": "http://localhost:8989",
+    "sonarr_api_key": "",
+
+    "radarr_root_folder": "X:\\plex\\movies",
+    "sonarr_root_folder": "X:\\plex\\shows"
+  }
+  
