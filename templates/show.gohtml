@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{.Name}} - Details</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Times New Roman', serif;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            padding: 2rem;
+        }
+        h1, h2, h3 {
+            font-weight: normal;
+            letter-spacing: 1px;
+            margin-bottom: 1rem;
+        }
+        h1 { font-size: 2.5rem; }
+        h2 { font-size: 2rem; border-bottom: 1px solid #333; padding-bottom: 0.5rem; margin-top: 2rem; }
+        h3 { font-size: 1.5rem; }
+        p { line-height: 1.6; color: #ccc; }
+        a {
+            color: #aaccff;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        a:hover {
+            color: #ddeeff;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            font-family: 'Times New Roman', serif;
+            background-color: #333;
+            color: #ffffff;
+            border: 2px solid #333;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background-color: #444;
+            border-color: #444;
+        }
+        .main-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .home-link {
+            display: block;
+            margin-bottom: 2rem;
+            font-size: 1.2rem;
+        }
+        .show-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 30px;
+        }
+        .poster img {
+            width: 100%;
+            border-radius: 4px;
+        }
+        .full-show-request {
+            border: 1px solid #333;
+            background-color: #2a2a2a;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border-radius: 4px;
+        }
+        .season-list {
+            list-style: none;
+            padding: 0;
+        }
+        .season-item {
+            background-color: #2a2a2a;
+            border: 1px solid #333;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+        }
+        .season-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+        .episodes-container {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #333;
+        }
+        .episode {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+        .episode:hover {
+            background-color: #333;
+        }
+        @media (max-width: 768px) {
+            body { padding: 1rem; }
+            h1 { font-size: 2rem; }
+            .show-grid {
+                grid-template-columns: 1fr;
+            }
+            .poster {
+                max-width: 250px;
+                margin: 0 auto 1rem;
+            }
+            .season-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            .season-header > div:last-child {
+                width: 100%;
+                display: flex;
+                gap: 0.5rem;
+            }
+            .season-header button {
+                flex-grow: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <a href="/" class="home-link">↫ Back to Search</a>
+        <div class="show-grid">
+            <div class="poster">
+                {{if .PosterPath}}
+                    <img src="https://image.tmdb.org/t/p/w300{{.PosterPath}}" alt="Poster for {{.Name}}">
+                {{end}}
+            </div>
+            <div class="details">
+                <h1>{{.Name}}</h1>
+                <p><strong>First Aired:</strong> {{.FirstAirDate}}</p>
+                <p>{{.Overview}}</p>
+            </div>
+        </div>
+
+        <div class="full-show-request">
+            <h3>Request Full Show</h3>
+            <p>This will add the series and monitor all seasons for downloads.</p>
+            <form action="/request" method="post">
+                <input type="hidden" name="type" value="tv">
+                <input type="hidden" name="tmdb_id" value="{{.ID}}">
+                <input type="hidden" name="request_type" value="full_show">
+                <button type="submit">Add Entire Show</button>
+            </form>
+        </div>
+
+        <h2>Seasons</h2>
+        <ul class="season-list">
+            {{range .Seasons}}
+                {{if ne .SeasonNumber 0}}
+                <li class="season-item">
+                    <div class="season-header">
+                        <div>
+                            <strong>{{.Name}}</strong> ({{.EpisodeCount}} episodes)
+                        </div>
+                        <div>
+                            <button onclick="toggleEpisodes(this, {{$.ID}}, {{.SeasonNumber}})">Episodes</button>
+                            <form action="/request" method="post" style="display: inline;">
+                                <input type="hidden" name="type" value="tv">
+                                <input type="hidden" name="tmdb_id" value="{{$.ID}}">
+                                <input type="hidden" name="request_type" value="season">
+                                <input type="hidden" name="season_number" value="{{.SeasonNumber}}">
+                                <button type="submit">Add Season</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div id="episodes-{{.SeasonNumber}}" class="episodes-container" style="display: none;">
+                        Loading...
+                    </div>
+                </li>
+                {{end}}
+            {{end}}
+        </ul>
+    </div>
+
+<script>
+    function toggleEpisodes(button, tmdbID, seasonNumber) {
+        const container = document.getElementById(`episodes-${seasonNumber}`);
+        const isVisible = container.style.display === 'block';
+
+        if (isVisible) {
+            container.style.display = 'none';
+        } else {
+            container.style.display = 'block';
+            if (container.innerHTML.trim() === 'Loading...') {
+                fetch(`/episodes?tmdb_id=${tmdbID}&season=${seasonNumber}`)
+                    .then(response => response.json())
+                    .then(episodes => {
+                        container.innerHTML = '';
+                        if (episodes && episodes.length > 0) {
+                            episodes.forEach(ep => {
+                                const episodeDiv = document.createElement('div');
+                                episodeDiv.className = 'episode';
+                                
+                                const episodeInfo = document.createElement('span');
+                                episodeInfo.textContent = `E${String(ep.episode_number).padStart(2, '0')}: ${ep.name}`;
+                                
+                                const episodeForm = document.createElement('form');
+                                episodeForm.action = '/request';
+                                episodeForm.method = 'post';
+                                episodeForm.style.display = 'inline';
+
+                                episodeForm.innerHTML = `
+                                    <input type="hidden" name="type" value="tv">
+                                    <input type="hidden" name="tmdb_id" value="${tmdbID}">
+                                    <input type="hidden" name="request_type" value="episode">
+                                    <input type="hidden" name="season_number" value="${seasonNumber}">
+                                    <input type="hidden" name="episode_number" value="${ep.episode_number}">
+                                    <button type="submit">Add</button>
+                                `;
+                                
+                                episodeDiv.appendChild(episodeInfo);
+                                episodeDiv.appendChild(episodeForm);
+                                container.appendChild(episodeDiv);
+                            });
+                        } else {
+                            container.textContent = 'No episode information available.';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Failed to fetch episodes:', error);
+                        container.textContent = 'Error loading episodes.';
+                    });
+            }
+        }
+    }
+</script>
+
+</body>
+</html>
