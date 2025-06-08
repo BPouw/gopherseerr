@@ -35,14 +35,10 @@ Installation & Setup
 Clone or Download
 Clone this repository to your machine or download the source code as a ZIP file.
 
-Bash
-
 git clone https://github.com/your-username/gopherseerr.git
 cd gopherseerr
 Create Configuration File
 Create a new file named config.json in the root directory and paste the following content into it.
-
-JSON
 
 {
   "port": "8080",
@@ -54,6 +50,7 @@ JSON
   "radarr_root_folder": "",
   "sonarr_root_folder": ""
 }
+
 Edit config.json
 Fill in the details for your setup:
 
@@ -65,8 +62,6 @@ Find this in Radarr/Sonarr under Settings -> Media Management -> Root Folders.
 Important for Windows users: Use double backslashes (\\) for paths in JSON, for example: "C:\\Media\\Movies".
 Run the Application
 Open a terminal or command prompt in the project directory and run:
-
-Bash
 
 go run .
 The server should now be running!
@@ -80,8 +75,6 @@ To create a standalone executable that you can run anywhere, follow these steps.
 
 Build for Background Execution
 To create an .exe that runs silently in the background without a black command window, use the following build command:
-
-DOS
 
 go build -ldflags="-H=windowsgui"
 Deploy the Files
