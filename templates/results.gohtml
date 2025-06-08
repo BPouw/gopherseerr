@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Search Results</title>
+</head>
+<body>
+    <h1>Search Results</h1>
+    <form method="post" action="/request">
+        <input type="hidden" name="type" id="mediaType" />
+        <input type="hidden" name="tmdb_id" id="tmdbID" />
+        <a href="/">← New Search</a>
+        <ul>
+            {{range .}}
+            <li>
+                <strong>{{if .Title}}{{.Title}}{{else}}{{.Name}}{{end}}</strong>
+                ({{if eq .MediaType "movie"}}Movie{{else}}TV Show{{end}})
+                <button type="submit" onclick="document.getElementById('mediaType').value='{{.MediaType}}';document.getElementById('tmdbID').value='{{.ID}}';">Request</button>
+            </li>
+            {{end}}
+        </ul>
+    </form>
+</body>
+</html>
