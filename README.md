@@ -19,8 +19,6 @@ Gopherseerr is a lightweight, self-hosted web application that provides a clean 
 
 ## Screenshots
 
-*(You can add your own screenshots here to show off the interface!)*
-
 **Search Page:**
 ![image](https://github.com/user-attachments/assets/13c46c53-693d-497d-b8e6-711adafe2edd)
 
