@@ -23,35 +23,72 @@ func NewClient(baseURL, apiKey string) *Client {
 
 type AddOptions struct {
 	SearchForMissingEpisodes bool   `json:"searchForMissingEpisodes"`
-	Monitor                  string `json:"monitor"` // e.g., "all"
+	Monitor                  string `json:"monitor"` // "all", "future", etc.
 }
 
 type Series struct {
-	Title        string     `json:"title,omitempty"`
-	TvdbID       int        `json:"tvdbId,omitempty"`
-	TmdbID       int        `json:"tmdbId"`
-	Quality      int        `json:"qualityProfileId,omitempty"`
-	RootFolder   string     `json:"rootFolderPath,omitempty"`
-	Monitored    bool       `json:"monitored"`
-	SeasonFolder bool       `json:"seasonFolder"`
-	AddOptions   AddOptions `json:"addOptions"`
-	SeriesType   string     `json:"seriesType,omitempty"` // e.g., "standard"
+	Title             string     `json:"title"`
+	TvdbID            int        `json:"tvdbId"`
+	TitleSlug         string     `json:"titleSlug"`
+	QualityProfileID  int        `json:"qualityProfileId"`
+	RootFolderPath    string     `json:"rootFolderPath"`
+	Monitored         bool       `json:"monitored"`
+	SeasonFolder      bool       `json:"seasonFolder"`
+	AddOptions        AddOptions `json:"addOptions"`
+	SeriesType        string     `json:"seriesType"` // "standard", "daily", etc.
+	Images            []Image    `json:"images,omitempty"`
+	Tags              []int      `json:"tags,omitempty"`
+	Year              int        `json:"year,omitempty"`
+	LanguageProfileID int        `json:"languageProfileId,omitempty"` // optional
 }
 
+type Image struct {
+	CoverType string `json:"coverType"`
+	URL       string `json:"url"`
+}
+
+// AddSeriesByTMDB looks up series by TMDB ID and adds it to Sonarr
 func (c *Client) AddSeriesByTMDB(tmdbID int, qualityProfileID int, rootFolder string) error {
-	series := Series{
-		TmdbID:       tmdbID,
-		Quality:      qualityProfileID,
-		RootFolder:   rootFolder,
-		Monitored:    true,
-		SeasonFolder: true,
-		AddOptions: AddOptions{
-			SearchForMissingEpisodes: true,
-			Monitor:                  "all",
-		},
-		SeriesType: "standard", // or "anime", "daily" if needed
+	// Step 1: Lookup series by TMDB ID
+	lookupURL := fmt.Sprintf("%s/api/v3/series/lookup?term=tmdb:%d", c.BaseURL, tmdbID)
+	lookupReq, err := http.NewRequest("GET", lookupURL, nil)
+	if err != nil {
+		return err
+	}
+	lookupReq.Header.Set("X-Api-Key", c.APIKey)
+
+	resp, err := http.DefaultClient.Do(lookupReq)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("failed lookup: %d - %s", resp.StatusCode, string(body))
 	}
 
+	var results []Series
+	if err := json.NewDecoder(resp.Body).Decode(&results); err != nil {
+		return err
+	}
+	if len(results) == 0 {
+		return fmt.Errorf("no series found for tmdb id %d", tmdbID)
+	}
+
+	// Use the first result
+	series := results[0]
+	series.QualityProfileID = qualityProfileID
+	series.RootFolderPath = rootFolder
+	series.Monitored = true
+	series.SeasonFolder = true
+	series.SeriesType = "standard"
+	series.AddOptions = AddOptions{
+		SearchForMissingEpisodes: true,
+		Monitor:                  "all",
+	}
+
+	// Step 2: POST to /series to add it
 	endpoint := fmt.Sprintf("%s/api/v3/series", c.BaseURL)
 	u, err := url.Parse(endpoint)
 	if err != nil {
@@ -72,15 +109,15 @@ func (c *Client) AddSeriesByTMDB(tmdbID int, qualityProfileID int, rootFolder st
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	postResp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer postResp.Body.Close()
 
-	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("sonarr API returned status %d: %s", resp.StatusCode, string(bodyBytes))
+	if postResp.StatusCode != http.StatusCreated && postResp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(postResp.Body)
+		return fmt.Errorf("sonarr API returned status %d: %s", postResp.StatusCode, string(bodyBytes))
 	}
 
 	return nil
