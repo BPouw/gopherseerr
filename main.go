@@ -2,8 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"html/template"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -108,5 +108,21 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	io.WriteString(w, "Request successfully submitted!")
+	showPopupAndRedirect(w, "Request successfully submitted!", "/")
+}
+
+func showPopupAndRedirect(w http.ResponseWriter, message, redirectURL string) {
+	w.Header().Set("Content-Type", "text/html")
+	html := fmt.Sprintf(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head><meta charset="UTF-8"><title>Notification</title></head>
+        <body>
+        <script>
+            alert(%q);
+            window.location.href = %q;
+        </script>
+        </body>
+        </html>`, message, redirectURL)
+	w.Write([]byte(html))
 }
