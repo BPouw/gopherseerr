@@ -43,7 +43,7 @@ Gopherseerr is a lightweight, self-hosted web application that provides a clean 
 1.  **Clone or Download**
     Clone this repository to your machine or download the source code as a ZIP file.
     ```bash
-    git clone [https://github.com/your-username/gopherseerr.git](https://github.com/your-username/gopherseerr.git)
+    git clone [https://github.com/bpouw/gopherseerr.git](https://github.com/bpouw/gopherseerr.git)
     cd gopherseerr
     ```
 
